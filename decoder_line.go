@@ -98,7 +98,6 @@ func decode_params(arr string) map[string]string {
 				cur_val = cur_val + string(c)
 			}
 		}
-		//last = c
 	}
 	p[cur_param] = cur_val
 	return p

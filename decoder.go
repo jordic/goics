@@ -163,12 +163,10 @@ func decodeInsideCal(d *decoder) {
 
 func decodeInsideEvent(d *decoder) {
 	if strings.Contains(d.current, keySep) {
-		key, val := getKeyVal(d.current)
-		if key == vEnd && val == vEvent {
+		node := DecodeLine(d.current)
+		//key, val := getKeyVal(d.current)
+		if node.Key == vEnd && node.Val == vEvent {
 			d.nextFn = decodeInsideCal
-			//if d.Calendar.Events == nil {
-			//	d.Calendar.Events = make([]*Event)
-			//}
 			d.Calendar.Events = append(d.Calendar.Events, d.currentEvent)
 			d.next()
 			return
