@@ -9,18 +9,13 @@ import (
 )
 
 const (
-	keySep       = ":"
-	vBegin       = "BEGIN"
-	vCalendar    = "VCALENDAR"
-	vEnd         = "END"
-	vEvent       = "VEVENT"
-	vDtend       = "DTEND"
-	vDtstart     = "DTSTART"
-	vUid         = "UID"
-	vDescription = "DESCRIPTION"
-	vSummary     = "SUMMARY"
-	vLocation    = "LOCATION"
-	maxLineRead	 = 65
+	keySep    = ":"
+	vBegin    = "BEGIN"
+	vCalendar = "VCALENDAR"
+	vEnd      = "END"
+	vEvent    = "VEVENT"
+
+	maxLineRead = 65
 )
 
 // Errors
@@ -36,7 +31,7 @@ type decoder struct {
 	currentEvent *Event
 	nextFn       stateFn
 	current      string
-	buffered	 string
+	buffered     string
 	line         int
 }
 
@@ -46,8 +41,8 @@ func NewDecoder(r io.Reader) *decoder {
 	d := &decoder{
 		scanner: bufio.NewScanner(r),
 		//calendar: &Calendar{},
-		nextFn: decodeInit,
-		line:   0,
+		nextFn:   decodeInit,
+		line:     0,
 		buffered: "",
 	}
 	return d
@@ -90,10 +85,10 @@ func (d *decoder) next() {
 		d.current = d.buffered
 		d.buffered = ""
 	}
-	
+
 	if len(d.current) > 65 {
 		is_continuation := true
-		for ; is_continuation == true; { 
+		for is_continuation == true {
 			res := d.scanner.Scan()
 			d.line++
 			if true != res {
@@ -109,7 +104,7 @@ func (d *decoder) next() {
 			}
 		}
 	}
-	
+
 	if d.nextFn != nil {
 		d.nextFn(d)
 	}
@@ -130,7 +125,6 @@ func decodeInit(d *decoder) {
 	d.nextFn = decodeInit
 	d.next()
 }
-
 
 func decodeInsideCal(d *decoder) {
 	if strings.Contains(d.current, keySep) {
@@ -162,15 +156,26 @@ func decodeInsideCal(d *decoder) {
 }
 
 func decodeInsideEvent(d *decoder) {
-	if strings.Contains(d.current, keySep) {
-		node := DecodeLine(d.current)
-		//key, val := getKeyVal(d.current)
-		if node.Key == vEnd && node.Val == vEvent {
-			d.nextFn = decodeInsideCal
-			d.Calendar.Events = append(d.Calendar.Events, d.currentEvent)
-			d.next()
-			return
-		}
+
+	node := DecodeLine(d.current)
+	if node.Key == vEnd && node.Val == vEvent {
+		d.nextFn = decodeInsideCal
+		d.Calendar.Events = append(d.Calendar.Events, d.currentEvent)
+		d.next()
+		return
 	}
+
+	switch {
+	case node.Key == "UID":
+		d.currentEvent.Uid = node.Val
+	case node.Key == "DESCRIPTION":
+		d.currentEvent.Description = node.Val
+	case node.Key == "SUMMARY":
+		d.currentEvent.Summary = node.Val
+	case node.Key == "LOCATION":
+		d.currentEvent.Location = node.Val
+
+	}
+
 	d.next()
 }
