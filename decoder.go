@@ -131,10 +131,6 @@ func decodeInit(d *decoder) {
 	d.next()
 }
 
-func getKeyVal(s string) (key, value string) {
-	p := strings.SplitN(s, keySep, 2)
-	return p[0], p[1]
-}
 
 func decodeInsideCal(d *decoder) {
 	if strings.Contains(d.current, keySep) {
