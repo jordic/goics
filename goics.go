@@ -1,0 +1,33 @@
+package goics
+
+import (
+	"time"
+)
+
+// Package goics implements an ical encoder and decoder.
+// First release will include decode and encoder of Event types
+// Will try to add more features as needed.
+
+type Calendar struct {
+	Uid    string
+	Events []*Event
+	Extra map[string]string
+}
+
+// http://www.kanzaki.com/docs/ical/vevent.html
+type Event struct {
+	Start       time.Time
+	End         time.Time
+	Uid         string
+	Summary     string
+	Description string
+	Location    string
+	// http://www.kanzaki.com/docs/ical/transp.html
+	Extra  map[string]string
+	//Alarms []*Alarm
+}
+
+// http://www.kanzaki.com/docs/ical/valarm.html
+//type Alarm struct {
+//	
+//}
