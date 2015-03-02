@@ -11,6 +11,9 @@ import (
 type Calendar struct {
 	Uid    string
 	Events []*Event
+	Calscale string
+	Version string
+	Prodid string
 	Params  map[string]string
 }
 

@@ -3,7 +3,6 @@ package goics
 import (
 	"bufio"
 	"errors"
-	//"fmt"
 	"io"
 	"strings"
 	"time"
@@ -56,14 +55,17 @@ func (d *decoder) Decode() (err error) {
 		d.err = VCalendarNotFound
 		return d.err
 	}
-	if d.nextFn != nil {
+	// If theres no error but, nextFn is not reset
+	// last element not closed
+	if d.nextFn != nil && d.err == nil {
 		d.err = VParseEndCalendar
 		return d.err
 	}
 	return d.err
 }
 
-// Lines processed
+// Lines processed. If Decoder reports an error.
+// Error 
 func (d *decoder) Lines() int {
 	return d.line
 }
@@ -76,7 +78,6 @@ func (d *decoder) CurrentLine() string {
 // Advances a new line in the decoder
 // And calls the next stateFunc
 // checks if next line is continuation line
-
 func (d *decoder) next() {
 	// If there's not buffered line
 	if d.buffered == "" {
@@ -118,7 +119,6 @@ func (d *decoder) next() {
 	}
 }
 
-
 func decodeInit(d *decoder) {
 	node := DecodeLine(d.current)
 	if node.Key == vBegin && node.Val == vCalendar {
@@ -142,14 +142,18 @@ func decodeInsideCal(d *decoder) {
 		}
 		d.nextFn = decodeInsideEvent
 		d.prevFn = decodeInsideCal
-		d.next()
 	case node.Key == vEnd && node.Val == vCalendar:
 		d.nextFn = nil
-		d.next()
+	case node.Key == "VERSION":
+		d.Calendar.Version = node.Val
+	case node.Key == "PRODID":
+		d.Calendar.Prodid = node.Val
+	case node.Key == "CALSCALE":
+		d.Calendar.Calscale = node.Val
 	default:
 		d.Calendar.Params[node.Key] = node.Val
-		d.next()
 	}
+	d.next()
 }
 
 func decodeInsideEvent(d *decoder) {
@@ -199,8 +203,9 @@ func decodeInsideEvent(d *decoder) {
 		d.currentEvent.Params[node.Key] = node.Val
 	}
 	if err != nil {
+		//@todo improve error notification, adding node info.. and line number
 		d.err = err
+	} else {
+		d.next()
 	}
-
-	d.next()
 }
