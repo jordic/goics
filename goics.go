@@ -11,19 +11,22 @@ import (
 type Calendar struct {
 	Uid    string
 	Events []*Event
-	Extra map[string]string
+	Extra  map[string]string
 }
 
 // http://www.kanzaki.com/docs/ical/vevent.html
 type Event struct {
-	Start       time.Time
-	End         time.Time
-	Uid         string
-	Summary     string
-	Description string
-	Location    string
-	// http://www.kanzaki.com/docs/ical/transp.html
-	Extra  map[string]string
+	Start        time.Time
+	End          time.Time
+	LastModified time.Time
+	Dtstamp      time.Time
+	Uid          string
+	Summary      string
+	Description  string
+	Location     string
+	Status       string
+	Transp		 string
+	Params       map[string]string
 	//Alarms []*Alarm
 }
 

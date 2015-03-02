@@ -7,11 +7,18 @@ import (
 
 
 func dateDecode(n *node) (time.Time, error) {
+
 	// DTEND;VALUE=DATE:20140406
 	if val, ok := n.Params["VALUE"]; ok {
 		switch {
 			case val=="DATE":
 				t, err := time.Parse("20060102", n.Val)
+				if err != nil {
+					return time.Time{}, err
+				}
+				return t, nil
+			case val =="DATE-TIME":
+				t, err := time.Parse("20060102T150405", n.Val)
 				if err != nil {
 					return time.Time{}, err
 				}
@@ -29,6 +36,14 @@ func dateDecode(n *node) (time.Time, error) {
 			return time.Time{}, err
 		}
 		return t, nil
+	}
+	//DTSTART:19980119T070000Z utf datetime
+	if len(n.Val) == 16 {
+		t, err := time.Parse("20060102T150405Z", n.Val)
+				if err != nil {
+					return time.Time{}, err
+				}
+				return t, nil
 	}
 	
 	return time.Time{}, nil

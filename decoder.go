@@ -6,6 +6,7 @@ import (
 	//"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 const (
@@ -164,7 +165,8 @@ func decodeInsideEvent(d *decoder) {
 		d.next()
 		return
 	}
-
+	var err error
+	var t time.Time
 	switch {
 	case node.Key == "UID":
 		d.currentEvent.Uid = node.Val
@@ -174,7 +176,26 @@ func decodeInsideEvent(d *decoder) {
 		d.currentEvent.Summary = node.Val
 	case node.Key == "LOCATION":
 		d.currentEvent.Location = node.Val
-
+	case node.Key == "STATUS":
+		d.currentEvent.Status = node.Val
+	case node.Key == "TRANSP":
+		d.currentEvent.Transp = node.Val
+	// Date based
+	case node.Key == "DTSTART":
+		t, err = dateDecode(node)
+		d.currentEvent.Start = t
+	case node.Key == "DTEND":
+		t, err = dateDecode(node)
+		d.currentEvent.End = t
+	case node.Key == "LAST-MODIFIED":
+		t, err = dateDecode(node)
+		d.currentEvent.LastModified = t
+	case node.Key == "DTSTAMP":
+		t, err = dateDecode(node)
+		d.currentEvent.Dtstamp = t
+	}
+	if err != nil {
+		d.err = err
 	}
 
 	d.next()
