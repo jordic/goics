@@ -31,7 +31,7 @@ type decoder struct {
 	Calendar     *Calendar
 	currentEvent *Event
 	nextFn       stateFn
-	prevFn		 stateFn
+	prevFn       stateFn
 	current      string
 	buffered     string
 	line         int
@@ -62,17 +62,21 @@ func (d *decoder) Decode() (err error) {
 	}
 	return d.err
 }
+
 // Lines processed
 func (d *decoder) Lines() int {
 	return d.line
 }
+
 // Current Line content
 func (d *decoder) CurrentLine() string {
 	return d.current
 }
 
-// Advances a new token in the decoder
+// Advances a new line in the decoder
 // And calls the next stateFunc
+// checks if next line is continuation line
+
 func (d *decoder) next() {
 	// If there's not buffered line
 	if d.buffered == "" {
@@ -101,6 +105,8 @@ func (d *decoder) next() {
 			if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
 				d.current = d.current + line[1:]
 			} else {
+				// If is not a continuation line, buffer it, for the
+				// next call.
 				d.buffered = line
 				is_continuation = false
 			}
@@ -112,64 +118,52 @@ func (d *decoder) next() {
 	}
 }
 
+
 func decodeInit(d *decoder) {
-	if strings.Contains(d.current, keySep) {
-		key, val := getKeyVal(d.current)
-		if key == vBegin {
-			if val == vCalendar {
-				d.Calendar = &Calendar{}
-				d.nextFn = decodeInsideCal
-				d.next()
-				return
-			}
+	node := DecodeLine(d.current)
+	if node.Key == vBegin && node.Val == vCalendar {
+		d.Calendar = &Calendar{
+			Params: make(map[string]string),
 		}
+		d.prevFn = decodeInit
+		d.nextFn = decodeInsideCal
+		d.next()
+		return
 	}
-	d.nextFn = decodeInit
 	d.next()
 }
 
 func decodeInsideCal(d *decoder) {
-	if strings.Contains(d.current, keySep) {
-		key, val := getKeyVal(d.current)
-		if key == vBegin && val == vEvent {
-			d.currentEvent = &Event{
-				Params: make(map[string]string),
-			}
-			d.nextFn = decodeInsideEvent
-			d.next()
-			return
+	node := DecodeLine(d.current)
+	switch {
+	case node.Key == vBegin && node.Val == vEvent:
+		d.currentEvent = &Event{
+			Params: make(map[string]string),
 		}
-		if key == vEnd && val == vCalendar {
-			d.nextFn = nil
-			d.next()
-			return
-		}
-
-		if key != "" && val != "" {
-			if d.Calendar.Extra == nil {
-				d.Calendar.Extra = make(map[string]string)
-			}
-			d.Calendar.Extra[key] = val
-			d.next()
-			return
-		}
-
+		d.nextFn = decodeInsideEvent
+		d.prevFn = decodeInsideCal
+		d.next()
+	case node.Key == vEnd && node.Val == vCalendar:
+		d.nextFn = nil
+		d.next()
+	default:
+		d.Calendar.Params[node.Key] = node.Val
+		d.next()
 	}
-	d.nextFn = decodeInsideCal
-	d.next()
 }
 
 func decodeInsideEvent(d *decoder) {
 
 	node := DecodeLine(d.current)
 	if node.Key == vEnd && node.Val == vEvent {
-		d.nextFn = decodeInsideCal
+		// Come back to parent node
+		d.nextFn = d.prevFn
 		d.Calendar.Events = append(d.Calendar.Events, d.currentEvent)
 		d.next()
 		return
 	}
 	//@todo handle Valarm
-	
+
 	var err error
 	var t time.Time
 	switch {

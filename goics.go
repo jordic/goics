@@ -11,7 +11,7 @@ import (
 type Calendar struct {
 	Uid    string
 	Events []*Event
-	Extra  map[string]string
+	Params  map[string]string
 }
 
 // http://www.kanzaki.com/docs/ical/vevent.html

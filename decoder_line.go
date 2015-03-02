@@ -41,6 +41,9 @@ func (n *node) GetOneParam() (string, string) {
 // Decodes a line extracting key, val and extra params
 // linked to key..
 func DecodeLine(line string) *node {
+	if strings.Contains(line, keySep) == false {
+		return &node{}
+	}
 	key, val := getKeyVal(line)
 	//@todo test if val containes , multipleparams
 	if strings.Contains(key, vParamSep) == false {

@@ -43,10 +43,10 @@ func TestInsideCalendar(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed %s", err)
 	}
-	if a.Calendar.Extra["CALSCALE"] != "GREGORIAN" {
+	if a.Calendar.Params["CALSCALE"] != "GREGORIAN" {
 		t.Error("No extra keys for calendar decoded")
 	}
-	if a.Calendar.Extra["VERSION"] != "2.0" {
+	if a.Calendar.Params["VERSION"] != "2.0" {
 		t.Error("No extra keys for calendar decoded")
 	}
 }
@@ -76,9 +76,9 @@ END:VCALENDAR
 func TestParseLongLines(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglines))
 	_ = a.Decode()
-	str := a.Calendar.Extra["CALSCALE"]
+	str := a.Calendar.Params["CALSCALE"]
 	if len(str) != 81 {
-		t.Errorf("Multiline test failed %s", len(a.Calendar.Extra["CALSCALE"]) )
+		t.Errorf("Multiline test failed %s", len(a.Calendar.Params["CALSCALE"]) )
 	}
 	if strings.Contains("str", " ") {
 		t.Error("Not handling correct begining of line")
@@ -96,7 +96,7 @@ END:VCALENDAR
 func TestParseLongLinesTab(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglinestab))
 	_ = a.Decode()
-	str := a.Calendar.Extra["CALSCALE"]
+	str := a.Calendar.Params["CALSCALE"]
 	if len(str) != 81 {
 		t.Errorf("Multiline tab field test failed %s", len(str) )
 	}
@@ -117,7 +117,7 @@ END:VCALENDAR
 func TestParseLongLinesMultilinethree(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglinestab3))
 	_ = a.Decode()
-	str := a.Calendar.Extra["CALSCALE"]
+	str := a.Calendar.Params["CALSCALE"]
 	if len(str) != 151 {
 		t.Errorf("Multiline (3lines) tab field test failed %s", len(str) )
 	}
