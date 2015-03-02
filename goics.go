@@ -20,18 +20,18 @@ type Event struct {
 	End          time.Time
 	LastModified time.Time
 	Dtstamp      time.Time
-	Created		time.Time
+	Created      time.Time
 	Uid          string
 	Summary      string
 	Description  string
 	Location     string
 	Status       string
-	Transp		 string
+	Transp       string
 	Params       map[string]string
 	//Alarms []*Alarm
 }
 
 // http://www.kanzaki.com/docs/ical/valarm.html
 //type Alarm struct {
-//	
+//
 //}
