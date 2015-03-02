@@ -3,7 +3,7 @@ package goics_test
 import (
 	"strings"
 	"testing"
-
+	"fmt"
 	goics "github.com/jordic/goics"
 )
 
@@ -131,12 +131,12 @@ var testevent =`BEGIN:VCALENDAR
 BEGIN:VEVENT
 DTEND;VALUE=DATE:20140506
 DTSTART;VALUE=DATE:20140501
-UID:-kpd6p8pqal11-n66f1wk1tw76@airbnb.com
+UID:-kpd6p8pqal11-n66f1wk1tw76@xxxx.com
 DESCRIPTION:CHECKIN:  01/05/2014\nCHECKOUT: 06/05/2014\nNIGHTS:   5\nPHON
  E:    \nEMAIL:    (no se ha facilitado ningún correo electrónico)\nPRO
- PERTY: Apartamento Muji 6-8 pax en Centro\n
+ PERTY: Apartamento xxx 6-8 pax en Centro\n
 SUMMARY:Luigi Carta (FYSPZN)
-LOCATION:Apartamento Muji 6-8 pax en Centro
+LOCATION:Apartamento xxx 6-8 pax en Centro
 END:VEVENT
 END:VCALENDAR
 `
@@ -150,4 +150,38 @@ func TestVEvent(t *testing.T) {
 		t.Error("Not decoding events", len(a.Calendar.Events))
 	}
 
+}
+
+var valarmCt = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+STATUS:CONFIRMED
+CREATED:20131205T115046Z
+UID:1ar5d7dlf0ddpcih9jum017tr4@google.com
+DTEND;VALUE=DATE:20140111
+TRANSP:OPAQUE
+SUMMARY:PASTILLA Cu cs
+DTSTART;VALUE=DATE:20140110
+DTSTAMP:20131205T115046Z
+LAST-MODIFIED:20131205T115046Z
+SEQUENCE:0
+DESCRIPTION:
+BEGIN:VALARM
+X-WR-ALARMUID:E283310A-82B3-47CF-A598-FD36634B21F3
+UID:E283310A-82B3-47CF-A598-FD36634B21F3
+TRIGGER:-PT15H
+X-APPLE-DEFAULT-ALARM:TRUE
+ATTACH;VALUE=URI:Basso
+ACTION:AUDIO
+END:VALARM
+END:VEVENT
+END:VCALENDAR`
+
+func TestNotParsingValarm(t *testing.T) {
+	a := goics.NewDecoder(strings.NewReader(valarmCt))
+	err := a.Decode()
+	if err != nil {
+		t.Errorf("Error decoding %s", err)
+	}
+	fmt.Println(len(a.Calendar.Events))
+	fmt.Println(a.Calendar.Events[0].Params)
 }

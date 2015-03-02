@@ -15,6 +15,7 @@ VERSION:2.0
 BEGIN:VEVENT
 DTEND;VALUE=DATE:20140406
 DTSTART;VALUE=DATE:20140404
+CREATED:20140404T110000Z
 UID:-kpd6p8pqal11-74iythu9giqs@xxx.com
 DESCRIPTION:CHECKIN:  04/04/2014\nCHECKOUT: 06/04/2014\nNIGHTS:   2\nPHON
  E:    \nEMAIL:    (no se ha facilitado ningún correo e
@@ -49,6 +50,23 @@ func TestVEventCharProperties(t *testing.T) {
 	if ev.Uid != "-kpd6p8pqal11-74iythu9giqs@xxx.com" {
 		t.Error("Wrong uid", ev.Uid)
 	}
+	st := parseDate("20140404")
+	if st.String() != ev.Start.String() {
+		t.Error("Wrong start date", ev.Start)
+	}
+	st = parseDate("20140406")
+	if st.String() != ev.End.String() {
+		t.Error("Wrong end date", ev.End)
+	}
+	tt := time.Date(2014, time.April, 04,  11, 0, 0, 0, time.UTC)
+	if tt.String() != ev.Created.String() {
+		t.Error("Wrong created date", ev.Created, tt)
+	}	
+}
+
+func parseDate(d string) time.Time {
+	t, _ := time.Parse("20060102", d)
+	return t
 }
 
 
@@ -82,6 +100,9 @@ func TestDateDecode(t *testing.T) {
 		res, err := dateDecode(node)
 		if err != nil {
 			t.Errorf("Error decoding time %s", err)
+		}
+		if res.Equal(times_expected[i]) == false {
+			t.Errorf("Error parsing time %s expected %s", res, times_expected[i])
 		}
 		if res.String() != times_expected[i].String() {
 			t.Errorf("Error parsing time %s expected %s", res, times_expected[i])

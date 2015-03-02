@@ -31,6 +31,7 @@ type decoder struct {
 	Calendar     *Calendar
 	currentEvent *Event
 	nextFn       stateFn
+	prevFn		 stateFn
 	current      string
 	buffered     string
 	line         int
@@ -61,11 +62,11 @@ func (d *decoder) Decode() (err error) {
 	}
 	return d.err
 }
-
+// Lines processed
 func (d *decoder) Lines() int {
 	return d.line
 }
-
+// Current Line content
 func (d *decoder) CurrentLine() string {
 	return d.current
 }
@@ -131,7 +132,9 @@ func decodeInsideCal(d *decoder) {
 	if strings.Contains(d.current, keySep) {
 		key, val := getKeyVal(d.current)
 		if key == vBegin && val == vEvent {
-			d.currentEvent = &Event{}
+			d.currentEvent = &Event{
+				Params: make(map[string]string),
+			}
 			d.nextFn = decodeInsideEvent
 			d.next()
 			return
@@ -165,6 +168,8 @@ func decodeInsideEvent(d *decoder) {
 		d.next()
 		return
 	}
+	//@todo handle Valarm
+	
 	var err error
 	var t time.Time
 	switch {
@@ -193,6 +198,11 @@ func decodeInsideEvent(d *decoder) {
 	case node.Key == "DTSTAMP":
 		t, err = dateDecode(node)
 		d.currentEvent.Dtstamp = t
+	case node.Key == "CREATED":
+		t, err = dateDecode(node)
+		d.currentEvent.Created = t
+	default:
+		d.currentEvent.Params[node.Key] = node.Val
 	}
 	if err != nil {
 		d.err = err

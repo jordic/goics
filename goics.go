@@ -20,6 +20,7 @@ type Event struct {
 	End          time.Time
 	LastModified time.Time
 	Dtstamp      time.Time
+	Created		time.Time
 	Uid          string
 	Summary      string
 	Description  string

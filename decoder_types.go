@@ -5,7 +5,7 @@ import (
 )
 
 
-
+// Decodes a date in the distincts formats
 func dateDecode(n *node) (time.Time, error) {
 
 	// DTEND;VALUE=DATE:20140406
