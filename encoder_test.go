@@ -39,13 +39,13 @@ func TestDateTimeFormat(t *testing.T) {
 var shortLine string = `asdf defined is a test\n\r`
 
 func TestLineWriter(t *testing.T) {
-	c := &goics.Calendar{}
+	
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
 	fmt.Fprintf(result, shortLine)
 
-	encoder := goics.NewWriter(c, w)
+	encoder := goics.NewWriter(w)
 	encoder.WriteLine(shortLine)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -59,7 +59,7 @@ func TestLineWriter(t *testing.T) {
 var longLine string = `As returned by NewWriter, a Writer writes records terminated by thisisat test that is expanded in multi lines` + goics.CRLF
 
 func TestLineWriterLongLine(t *testing.T) {
-	c := &goics.Calendar{}
+	
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
@@ -68,7 +68,7 @@ func TestLineWriterLongLine(t *testing.T) {
 	fmt.Fprintf(result, "test that is expanded in multi lines")
 	fmt.Fprintf(result, goics.CRLF)
 
-	encoder := goics.NewWriter(c, w)
+	encoder := goics.NewWriter(w)
 	encoder.WriteLine(longLine)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -80,7 +80,7 @@ func TestLineWriterLongLine(t *testing.T) {
 
 func Test2ongLineWriter(t *testing.T) {
 	goics.LineSize = 10
-	c := &goics.Calendar{}
+	
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
@@ -91,7 +91,7 @@ func Test2ongLineWriter(t *testing.T) {
 	fmt.Fprintf(result, " 2345678")
 
 	var str string = `1234567823456782345678`
-	encoder := goics.NewWriter(c, w)
+	encoder := goics.NewWriter(w)
 	encoder.WriteLine(str)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -103,14 +103,6 @@ func Test2ongLineWriter(t *testing.T) {
 }
 
 
-var contentevent string = `
-DTEND;VALUE=DATE:20140406
-DTSTART;VALUE=DATE:20140404
-UID:-kpd6p8pqal11-74iythu9giqs@xxx.com
-DESCRIPTION:test
-LOCATION:Apartamento xxxx pax en Centro
-END:VEVENT`
-
 func TestContentEvent(t *testing.T) {
 	goics.LineSize = 75
 	c := &goics.Event{
@@ -121,7 +113,7 @@ func TestContentEvent(t *testing.T) {
 		Description: "test",
 	}
 	w := &bytes.Buffer{}
-	writer := goics.NewWriter(&goics.Calendar{}, w)
+	writer := goics.NewWriter(w)
 	result := &bytes.Buffer{}
 	
 	fmt.Fprintf(result, "BEGIN:VEVENT" + goics.CRLF)

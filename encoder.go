@@ -12,7 +12,6 @@ const (
 )
 
 type Writer struct {
-	c    *Calendar
 	w    io.Writer
 	opts map[string]func(string, time.Time) string
 }
@@ -29,23 +28,56 @@ var defaultOptions = map[string]func(string, time.Time) string{
 var LineSize int = 75
 
 // Creates a New writer with default options for date fields
-func NewWriter(c *Calendar, w io.Writer) *Writer {
+func NewWriter(w io.Writer) *Writer {
 	return &Writer{
-		c:    c,
 		w:    w,
 		opts: defaultOptions,
 	}
 }
 
 // Creates a new Writer with custom options for Date Fields
-func NewWriterOpts(c *Calendar, w io.Writer, opts map[string]func(string, time.Time) string) *Writer {
+func NewWriterOpts(w io.Writer, opts map[string]func(string, time.Time) string) *Writer {
 	return &Writer{
-		c:    c,
 		w:    w,
 		opts: opts,
 	}
 }
 
+// Writes a calendar to writer.
+func WriteCalendar(c *Calendar, w *Writer) {
+	w.WriteLine("BEGIN:VCALENDAR" + CRLF)
+	if c.Prodid != "" {
+		w.WriteLine(WriteStringField("Prodid", c.Prodid))
+	} else {
+		w.WriteLine(WriteStringField("Prodid", "-//tmpo.io/src/goics"))
+	}
+	if c.Calscale != "" {
+		w.WriteLine(WriteStringField("Calscale", c.Calscale))
+	} else {
+		w.WriteLine(WriteStringField("Calscale", "GREGORIAN"))
+	}
+	if c.Version != "" {
+		w.WriteLine(WriteStringField("Version", c.Version))
+	} else {
+		w.WriteLine(WriteStringField("Version", "2.0"))
+	}
+	if c.Uid != "" {
+		w.WriteLine(WriteStringField("Uid", c.Uid))
+	}
+	for key, val := range c.Params {
+		w.WriteLine(WriteStringField(key, val))
+	}
+	
+	for _, ev := range c.Events {
+		WriteEvent(ev, w)
+	}
+	
+	w.WriteLine("END:VCALENDAR" + CRLF)
+}
+
+
+
+// Writes an event struct to a writer
 func WriteEvent(ev *Event, w *Writer) {
 
 	w.WriteLine("BEGIN:VEVENT" + CRLF)
