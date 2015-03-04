@@ -31,10 +31,11 @@ type Event struct {
 	Status       string
 	Transp       string
 	Params       map[string]string
-	//Alarms []*Alarm
+	Alarms []*Alarm
 }
 
 // http://www.kanzaki.com/docs/ical/valarm.html
-//type Alarm struct {
-//
-//}
+// @todo, not implemented
+type Alarm struct {
+
+}
