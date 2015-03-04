@@ -1,6 +1,7 @@
 package goics_test
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -202,6 +203,30 @@ func TestParserError(t *testing.T) {
 	}
 	if a.Lines() != 3 {
 		t.Error("Wrong line error reported")
+	}
+
+}
+
+func TestReadingRealFile(t *testing.T) {
+
+	file, err := os.Open("fixtures/test.ics")
+	if err != nil {
+		t.Error("Can't read file")
+	}
+	defer file.Close()
+
+	cal := goics.NewDecoder(file)
+	err = cal.Decode()
+	if err != nil {
+		t.Error("Cant decode a complete file")
+	}
+	
+	if len(cal.Calendar.Events) != 28 {
+		t.Errorf("Wrong number of events detected %s", len(cal.Calendar.Events))
+	}
+
+	if cal.Calendar.Events[0].Summary != "Clarisse De  (AZfTDA)" {
+		t.Errorf("Wrong summary")
 	}
 
 }
