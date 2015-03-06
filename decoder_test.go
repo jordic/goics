@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
+	"fmt"
 
 	goics "github.com/jordic/goics"
 )
@@ -220,13 +222,59 @@ func TestReadingRealFile(t *testing.T) {
 	if err != nil {
 		t.Error("Cant decode a complete file")
 	}
-	
+
 	if len(cal.Calendar.Events) != 28 {
 		t.Errorf("Wrong number of events detected %s", len(cal.Calendar.Events))
 	}
 
 	if cal.Calendar.Events[0].Summary != "Clarisse De  (AZfTDA)" {
 		t.Errorf("Wrong summary")
+	}
+
+}
+
+var testDecodeStruct = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+STATUS:CONFIRMED
+CREATED:20131205T115046Z
+UID:1ar5d7dlf0ddpcih9jum017tr4@google.com
+DTEND;VALUE=DATE:20140111
+TRANSP:OPAQUE
+SUMMARY:PASTILLA Cu cs
+DTSTART;VALUE=DATE:20140110
+DTSTAMP:20131205T115046Z
+LAST-MODIFIED:20131205T115046Z
+SEQUENCE:0
+DESCRIPTION:
+BEGIN:VALARM
+X-WR-ALARMUID:E283310A-82B3-47CF-A598-FD36634B21F3
+UID:E283310A-82B3-47CF-A598-FD36634B21F3
+TRIGGER:-PT15H
+X-APPLE-DEFAULT-ALARM:TRUE
+ATTACH;VALUE=URI:Basso
+ACTION:AUDIO
+END:VALARM
+END:VEVENT
+END:VCALENDAR`
+
+type Event struct {
+	Dtstart time.Time
+	Dtend   time.Time
+	Dtstamp time.Time
+	Summary string
+}
+
+func TestDecodeEventsToStruct(t *testing.T) {
+
+	ev := []Event{}
+	d := goics.NewDecoder(strings.NewReader(testDecodeStruct))
+	err := d.DecodeEvents(&ev)
+	if err != nil {
+		t.Errorf("Error decoding %s", err)
+	}
+	fmt.Println(ev)
+	if len(ev) != 1 {
+		t.Errorf("Wrong length decoding events from stream")
 	}
 
 }

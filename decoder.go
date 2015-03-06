@@ -3,7 +3,9 @@ package goics
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -64,8 +66,64 @@ func (d *decoder) Decode() (err error) {
 	return d.err
 }
 
+// Decode events should decode events found in buff
+// into a slice of passed struct &Event
+// Idealy struct should add mapping capabilities in tag strings
+// like:
+//
+// type Event struct {
+//		ID string `ics:"UID"`
+//		Start time.Time `ics:"DTSTART"`
+// }
+// v must be a slice of []*Event
+//
+func (d *decoder) DecodeEvents(dest interface{}) error {
+	err := d.Decode()
+	if err != nil {
+		return err
+	}
+	
+	dt := reflect.ValueOf(dest).Elem()
+	direct := reflect.Indirect( reflect.ValueOf(dest) )
+	fmt.Println( dt.Kind() )
+	if dt.Kind() == reflect.Slice {
+		tipo := dt.Type().Elem()
+		eventitem := reflect.New(tipo)
+		item := eventitem.Elem()
+		for _, ev := range d.Calendar.Events {
+			for i:=0; i<tipo.NumField(); i++ {
+				typeField := tipo.Field(i)
+				if strings.ToLower(typeField.Name) == "dtstart" {
+					item.Field(i).Set( reflect.ValueOf(ev.Start) )
+				}
+				fmt.Printf("Field Name %s, field type %s\n", typeField.Name, typeField)
+			}
+			direct.Set(reflect.Append(dt, item))
+			fmt.Println(dt)
+		}
+	}
+	/*to := reflect.Indirect(reflect.ValueOf(v))
+	
+		tipo := reflect.ValueOf(v).Type()
+		fmt.Println(tipo)
+		fmt.Println("Is a slice", to.Type().Elem() )
+		if len(d.Calendar.Events) == 0 {
+			return nil			
+		}
+		//
+			for i:=0; i<tipo.NumField(); i++ {
+				typeField := tipo.Field(i)
+				fmt.Println("Field Name %s, field type %s", typeField.Name, typeField)
+			}
+		//}
+	}*/
+	return nil
+}
+
+
+
 // Lines processed. If Decoder reports an error.
-// Error 
+// Error
 func (d *decoder) Lines() int {
 	return d.line
 }
