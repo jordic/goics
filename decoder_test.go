@@ -14,20 +14,35 @@ func TestTesting(t *testing.T) {
 	}
 }
 
+type Calendar struct {
+	Data map[string]string
+}
+func (e *Calendar) ConsumeICal(c *goics.Calendar, err error) error {
+	for k, v := range c.Data {
+		e.Data[k] = v.Val
+	}
+	return err
+}
+
+func NewCal() *Calendar {
+	return &Calendar{
+		Data: make(map[string]string),
+	}
+}
+
+
 var source = "asdf\nasdf\nasdf"
 
 func TestEndOfFile(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(source))
-	err := a.Decode()
+	err := a.Decode(&Calendar{})
 	if err != goics.VCalendarNotFound {
 		t.Errorf("Decode filed, decode raised %s", err)
 	}
 	if a.Lines() != 3 {
 		t.Errorf("Decode should advance to %s", a.Lines())
 	}
-	if a.Calendar != nil {
-		t.Errorf("No calendar in file")
-	}
+	
 }
 
 var test2 = `BEGIN:VCALENDAR
@@ -40,14 +55,15 @@ END:VCALENDAR
 
 func TestInsideCalendar(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(test2))
-	err := a.Decode()
+	consumer := NewCal()
+	err := a.Decode(consumer)
 	if err != nil {
 		t.Errorf("Failed %s", err)
 	}
-	if a.Calendar.Calscale != "GREGORIAN" {
+	if consumer.Data["CALSCALE"] != "GREGORIAN" {
 		t.Error("No extra keys for calendar decoded")
 	}
-	if a.Calendar.Version != "2.0" {
+	if consumer.Data["VERSION"] != "2.0" {
 		t.Error("No extra keys for calendar decoded")
 	}
 }
@@ -59,7 +75,7 @@ VERSION:2.`
 
 func TestDetectIncompleteCalendar(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(test3))
-	err := a.Decode()
+	err := a.Decode(&Calendar{})
 	if err != goics.VParseEndCalendar {
 		t.Error("Test failed")
 	}
@@ -76,10 +92,11 @@ END:VCALENDAR
 
 func TestParseLongLines(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglines))
-	_ = a.Decode()
-	str := a.Calendar.Calscale
+	cons := NewCal()
+	_ = a.Decode(cons)
+	str := cons.Data["CALSCALE"]
 	if len(str) != 81 {
-		t.Errorf("Multiline test failed %s", len(a.Calendar.Params["CALSCALE"]))
+		t.Errorf("Multiline test failed %s", len(cons.Data["CALSCALE"]))
 	}
 	if strings.Contains("str", " ") {
 		t.Error("Not handling correct begining of line")
@@ -97,8 +114,10 @@ END:VCALENDAR
 
 func TestParseLongLinesTab(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglinestab))
-	_ = a.Decode()
-	str := a.Calendar.Calscale
+	cons := NewCal()
+	_ = a.Decode(cons)
+	str := cons.Data["CALSCALE"]
+	
 	if len(str) != 81 {
 		t.Errorf("Multiline tab field test failed %s", len(str))
 	}
@@ -119,8 +138,9 @@ END:VCALENDAR
 
 func TestParseLongLinesMultilinethree(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(testlonglinestab3))
-	_ = a.Decode()
-	str := a.Calendar.Calscale
+	cons := NewCal()
+	_ = a.Decode(cons)
+	str := cons.Data["CALSCALE"]
 	if len(str) != 151 {
 		t.Errorf("Multiline (3lines) tab field test failed %s", len(str))
 	}
@@ -130,31 +150,6 @@ func TestParseLongLinesMultilinethree(t *testing.T) {
 
 }
 
-var testevent = `BEGIN:VCALENDAR
-BEGIN:VEVENT
-DTEND;VALUE=DATE:20140506
-DTSTART;VALUE=DATE:20140501
-UID:-kpd6p8pqal11-n66f1wk1tw76@xxxx.com
-DESCRIPTION:CHECKIN:  01/05/2014\nCHECKOUT: 06/05/2014\nNIGHTS:   5\nPHON
- E:    \nEMAIL:    (no se ha facilitado ningún correo electrónico)\nPRO
- PERTY: Apartamento xxx 6-8 pax en Centro\n
-SUMMARY:Luigi Carta (FYSPZN)
-LOCATION:Apartamento xxx 6-8 pax en Centro
-END:VEVENT
-END:VCALENDAR
-`
-
-func TestVEvent(t *testing.T) {
-	a := goics.NewDecoder(strings.NewReader(testevent))
-	err := a.Decode()
-	if err != nil {
-		t.Errorf("Error decoding %s", err)
-	}
-	if len(a.Calendar.Events) != 1 {
-		t.Error("Not decoding events", len(a.Calendar.Events))
-	}
-
-}
 
 var valarmCt = `BEGIN:VCALENDAR
 BEGIN:VEVENT
@@ -182,30 +177,14 @@ END:VCALENDAR`
 
 func TestNotParsingValarm(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(valarmCt))
-	err := a.Decode()
+	cons := NewCal()
+	err := a.Decode(cons)
+	
 	if err != nil {
 		t.Errorf("Error decoding %s", err)
 	}
 }
 
-var tParseError = `BEGIN:VCALENDAR
-BEGIN:VEVENT
-DTEND;VALUE=DATE:20140230a
-END:VEVENT
-END:VCALENDAR`
-
-func TestParserError(t *testing.T) {
-
-	a := goics.NewDecoder(strings.NewReader(tParseError))
-	err := a.Decode()
-	if err == nil {
-		t.Error("Should return a parsing error")
-	}
-	if a.Lines() != 3 {
-		t.Error("Wrong line error reported")
-	}
-
-}
 
 func TestReadingRealFile(t *testing.T) {
 
@@ -216,7 +195,8 @@ func TestReadingRealFile(t *testing.T) {
 	defer file.Close()
 
 	cal := goics.NewDecoder(file)
-	err = cal.Decode()
+	cons := NewCal()
+	err = cal.Decode(cons)
 	if err != nil {
 		t.Error("Cant decode a complete file")
 	}
@@ -225,8 +205,6 @@ func TestReadingRealFile(t *testing.T) {
 		t.Errorf("Wrong number of events detected %s", len(cal.Calendar.Events))
 	}
 
-	if cal.Calendar.Events[0].Summary != "Clarisse De  (AZfTDA)" {
-		t.Errorf("Wrong summary")
-	}
+	
 
 }

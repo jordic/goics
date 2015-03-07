@@ -8,16 +8,16 @@ const (
 	vParamSep = ";"
 )
 
-// node is a basic token.., with, key, val, and extra params
+// IcsNode is a basic token.., with, key, val, and extra params
 // to define the type of val.
-type node struct {
+type IcsNode struct {
 	Key    string
 	Val    string
 	Params map[string]string
 }
 
 // how many params has a token
-func (n *node) ParamsLen() int {
+func (n *IcsNode) ParamsLen() int {
 	if n.Params == nil {
 		return 0
 	}
@@ -26,7 +26,7 @@ func (n *node) ParamsLen() int {
 
 // If only has one extra param, returns it..
 // as key, val
-func (n *node) GetOneParam() (string, string) {
+func (n *IcsNode) GetOneParam() (string, string) {
 	if n.ParamsLen() == 0 {
 		return "", ""
 	}
@@ -40,14 +40,14 @@ func (n *node) GetOneParam() (string, string) {
 
 // Decodes a line extracting key, val and extra params
 // linked to key..
-func DecodeLine(line string) *node {
+func DecodeLine(line string) *IcsNode {
 	if strings.Contains(line, keySep) == false {
-		return &node{}
+		return &IcsNode{}
 	}
 	key, val := getKeyVal(line)
 	//@todo test if val containes , multipleparams
 	if strings.Contains(key, vParamSep) == false {
-		return &node{
+		return &IcsNode{
 			Key: key,
 			Val: val,
 		}
@@ -55,7 +55,7 @@ func DecodeLine(line string) *node {
 		// Extract key
 		first_param := strings.Index(key, vParamSep)
 		real_key := key[0:first_param]
-		n := &node{
+		n := &IcsNode{
 			Key: real_key,
 			Val: val,
 		}

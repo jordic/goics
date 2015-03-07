@@ -6,7 +6,7 @@ import (
 
 
 // Decodes a date in the distincts formats
-func dateDecode(n *node) (time.Time, error) {
+func (n *IcsNode) DateDecode() (time.Time, error) {
 
 	// DTEND;VALUE=DATE:20140406
 	if val, ok := n.Params["VALUE"]; ok {
