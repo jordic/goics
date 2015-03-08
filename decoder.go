@@ -7,7 +7,6 @@ import (
 	"io"
 	"reflect"
 	"strings"
-	"time"
 )
 
 const (
@@ -26,6 +25,8 @@ var (
 	VParseEndCalendar = errors.New("wrong format END:VCALENDAR not Found")
 )
 
+
+
 type decoder struct {
 	scanner      *bufio.Scanner
 	err          error
@@ -43,7 +44,6 @@ type stateFn func(*decoder)
 func NewDecoder(r io.Reader) *decoder {
 	d := &decoder{
 		scanner: bufio.NewScanner(r),
-		//calendar: &Calendar{},
 		nextFn:   decodeInit,
 		line:     0,
 		buffered: "",
@@ -51,18 +51,22 @@ func NewDecoder(r io.Reader) *decoder {
 	return d
 }
 
-func (d *decoder) Decode() (err error) {
+func (d *decoder) Decode(c ICalConsumer) error {
 	d.next()
 	if d.Calendar == nil {
 		d.err = VCalendarNotFound
-		return d.err
+		d.Calendar = &Calendar{}
 	}
 	// If theres no error but, nextFn is not reset
 	// last element not closed
 	if d.nextFn != nil && d.err == nil {
 		d.err = VParseEndCalendar
+	}
+	if d.err != nil {
 		return d.err
 	}
+	
+	d.err = c.ConsumeICal(d.Calendar, d.err)
 	return d.err
 }
 
@@ -181,7 +185,7 @@ func decodeInit(d *decoder) {
 	node := DecodeLine(d.current)
 	if node.Key == vBegin && node.Val == vCalendar {
 		d.Calendar = &Calendar{
-			Params: make(map[string]string),
+			Data: make(map[string]*IcsNode),
 		}
 		d.prevFn = decodeInit
 		d.nextFn = decodeInsideCal
@@ -196,20 +200,14 @@ func decodeInsideCal(d *decoder) {
 	switch {
 	case node.Key == vBegin && node.Val == vEvent:
 		d.currentEvent = &Event{
-			Params: make(map[string]string),
+			Data: make(map[string]*IcsNode),
 		}
 		d.nextFn = decodeInsideEvent
 		d.prevFn = decodeInsideCal
 	case node.Key == vEnd && node.Val == vCalendar:
 		d.nextFn = nil
-	case node.Key == "VERSION":
-		d.Calendar.Version = node.Val
-	case node.Key == "PRODID":
-		d.Calendar.Prodid = node.Val
-	case node.Key == "CALSCALE":
-		d.Calendar.Calscale = node.Val
 	default:
-		d.Calendar.Params[node.Key] = node.Val
+		d.Calendar.Data[node.Key] = node
 	}
 	d.next()
 }
@@ -225,45 +223,8 @@ func decodeInsideEvent(d *decoder) {
 		return
 	}
 	//@todo handle Valarm
+	//@todo handle error if we found a startevent without closing pass one	
+	d.currentEvent.Data[node.Key] = node
+	d.next()
 
-	var err error
-	var t time.Time
-	switch {
-	case node.Key == "UID":
-		d.currentEvent.Uid = node.Val
-	case node.Key == "DESCRIPTION":
-		d.currentEvent.Description = node.Val
-	case node.Key == "SUMMARY":
-		d.currentEvent.Summary = node.Val
-	case node.Key == "LOCATION":
-		d.currentEvent.Location = node.Val
-	case node.Key == "STATUS":
-		d.currentEvent.Status = node.Val
-	case node.Key == "TRANSP":
-		d.currentEvent.Transp = node.Val
-	// Date based
-	case node.Key == "DTSTART":
-		t, err = dateDecode(node)
-		d.currentEvent.Start = t
-	case node.Key == "DTEND":
-		t, err = dateDecode(node)
-		d.currentEvent.End = t
-	case node.Key == "LAST-MODIFIED":
-		t, err = dateDecode(node)
-		d.currentEvent.LastModified = t
-	case node.Key == "DTSTAMP":
-		t, err = dateDecode(node)
-		d.currentEvent.Dtstamp = t
-	case node.Key == "CREATED":
-		t, err = dateDecode(node)
-		d.currentEvent.Created = t
-	default:
-		d.currentEvent.Params[node.Key] = node.Val
-	}
-	if err != nil {
-		//@todo improve error notification, adding node info.. and line number
-		d.err = err
-	} else {
-		d.next()
-	}
 }

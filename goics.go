@@ -1,41 +1,49 @@
+// Copyright 2015 jordi collell j@tmpo.io. All rights reserved 
+// Package goics implements an ical encoder and decoder.
+// First release will include decode and encoder of Event types
+
 package goics
 
 import (
-	"time"
+	
 )
 
-// Package goics implements an ical encoder and decoder.
-// First release will include decode and encoder of Event types
-// Will try to add more features as needed.
+// ICalDecoder is the realy important part of the decoder lib
+// The decoder is organized around the Provider/Consumer pattern.
+// the decoder acts as a consummer producing IcsNode's and
+// Every data type that wants to receive data, must implement
+// the consumer pattern.
+type ICalConsumer interface {
+	ConsumeICal(d *Calendar, err error) error
+}
+
+// ICalEmiter must be implemented in order to allow objects to be serialized
+// It should return a *goics.Calendar and optional a map of fields and
+// their serializers, if no serializer is defined, it will serialize as
+// string.. 
+type ICalEmiter interface {
+	EmitICal() Componenter
+}
+
+// Componenter defines what should be a component that can be rendered with
+// others components inside and some properties
+// CALENDAR >> VEVENT ALARM VTODO
+type Componenter interface {
+	Write( w *ICalEncode )
+	AddComponent(c Componenter)
+	SetType(t string)
+	AddProperty( string, string )
+}
+
 
 type Calendar struct {
-	Uid    string
-	Events []*Event
-	Calscale string
-	Version string
-	Prodid string
-	Params  map[string]string
+	Data map[string]*IcsNode // map of every property found on ics file
+	Events []*Event // slice of events founds in file
 }
-
-// http://www.kanzaki.com/docs/ical/vevent.html
+ 
 type Event struct {
-	Start        time.Time
-	End          time.Time
-	LastModified time.Time
-	Dtstamp      time.Time
-	Created      time.Time
-	Uid          string
-	Summary      string
-	Description  string
-	Location     string
-	Status       string
-	Transp       string
-	Params       map[string]string
-	Alarms []*Alarm
+	Data map[string]*IcsNode
+	Alarms []*map[string]*IcsNode
 }
 
-// http://www.kanzaki.com/docs/ical/valarm.html
-// @todo, not implemented
-type Alarm struct {
 
-}

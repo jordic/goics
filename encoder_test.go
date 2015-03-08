@@ -9,43 +9,112 @@ import (
 	goics "github.com/jordic/goics"
 )
 
-func TestDateFieldFormat(t *testing.T) {
-	result := "DTEND;VALUE=DATE:20140406\r\n"
+func TestComponentCreation(t *testing.T) {
+
+	c := goics.NewComponent()
+	c.SetType("VCALENDAR")
+	c.AddProperty("CALSCAL", "GREGORIAN")
+	c.AddProperty("PRODID", "-//tmpo.io/src/goics")
+
+	if c.Properties["CALSCAL"] != "GREGORIAN" {
+		t.Error("Error setting property")
+	}
+
+	m := goics.NewComponent()
+	m.SetType("VEVENT")
+	m.AddProperty("UID", "testing")
+
+	c.AddComponent(m)
+
+	if len(c.Elements) != 1 {
+		t.Error("Error adding a component")
+	}
+
+}
+
+type EventTest struct {
+	component goics.Componenter
+}
+
+func (evt *EventTest) EmitICal() goics.Componenter {
+	return evt.component
+}
+
+func TestWritingSimple(t *testing.T) {
+	c := goics.NewComponent()
+	c.SetType("VCALENDAR")
+	c.AddProperty("CALSCAL", "GREGORIAN")
+
+	ins := &EventTest{
+		component: c,
+	}
+
+	w := &bytes.Buffer{}
+	enc := goics.NewICalEncode(w)
+	enc.Encode(ins)
+
+	result := &bytes.Buffer{}
+	fmt.Fprintf(result, "BEGIN:VCALENDAR"+goics.CRLF)
+	fmt.Fprintf(result, "CALSCAL:GREGORIAN"+goics.CRLF)
+	fmt.Fprintf(result, "END:VCALENDAR"+goics.CRLF)
+
+	res := bytes.Compare(w.Bytes(), result.Bytes())
+	if res != 0 {
+		t.Errorf("%s!=%s %s", w, result, res)
+
+	}
+
+}
+
+func TestFormatDateFieldFormat(t *testing.T) {
+	rkey := "DTEND;VALUE=DATE"
+	rval := "20140406"
 	ti := time.Date(2014, time.April, 06, 0, 0, 0, 0, time.UTC)
-	str := goics.WriteDateField("DTEND", ti)
-	if result != str {
-		t.Error("Expected", result, "Result", str)
+	key, val := goics.FormatDateField("DTEND", ti)
+	if rkey != key {
+		t.Error("Expected", rkey, "Result", key)
+	}
+	if rval != val {
+		t.Error("Expected", rval, "Result", val)
 	}
 }
 
-func TestDateTimeFieldFormat(t *testing.T) {
-	result := "X-MYDATETIME;VALUE=DATE-TIME:20120901T130000\r\n"
+func TestFormatDateTimeFieldFormat(t *testing.T) {
+	rkey := "X-MYDATETIME;VALUE=DATE-TIME"
+	rval := "20120901T130000"
 	ti := time.Date(2012, time.September, 01, 13, 0, 0, 0, time.UTC)
-	str := goics.WriteDateTimeField("X-MYDATETIME", ti)
-	if result != str {
-		t.Error("Expected", result, "Result", str)
+	key, val := goics.FormatDateTimeField("X-MYDATETIME", ti)
+	if rkey != key {
+		t.Error("Expected", rkey, "Result", key)
+	}
+	if rval != val {
+		t.Error("Expected", rval, "Result", val)
 	}
 }
 
 func TestDateTimeFormat(t *testing.T) {
-	result := "DTSTART:19980119T070000Z\r\n"
+	rkey := "DTSTART"
+	rval := "19980119T070000Z"
 	ti := time.Date(1998, time.January, 19, 07, 0, 0, 0, time.UTC)
-	str := goics.WriteDateTime("DTSTART", ti)
-	if result != str {
-		t.Error("Expected", result, "Result", str)
+	key, val := goics.FormatDateTime("DTSTART", ti)
+	if rkey != key {
+		t.Error("Expected", rkey, "Result", key)
+	}
+	if rval != val {
+		t.Error("Expected", rval, "Result", val)
 	}
 }
 
 var shortLine string = `asdf defined is a test\n\r`
 
 func TestLineWriter(t *testing.T) {
-	
+
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
 	fmt.Fprintf(result, shortLine)
 
-	encoder := goics.NewWriter(w)
+	encoder := goics.NewICalEncode(w)
 	encoder.WriteLine(shortLine)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -59,7 +128,7 @@ func TestLineWriter(t *testing.T) {
 var longLine string = `As returned by NewWriter, a Writer writes records terminated by thisisat test that is expanded in multi lines` + goics.CRLF
 
 func TestLineWriterLongLine(t *testing.T) {
-	
+
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
@@ -68,7 +137,7 @@ func TestLineWriterLongLine(t *testing.T) {
 	fmt.Fprintf(result, "test that is expanded in multi lines")
 	fmt.Fprintf(result, goics.CRLF)
 
-	encoder := goics.NewWriter(w)
+	encoder := goics.NewICalEncode(w)
 	encoder.WriteLine(longLine)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -77,6 +146,7 @@ func TestLineWriterLongLine(t *testing.T) {
 		t.Errorf("%s!=%s %s", w, result, res)
 	}
 }
+
 
 func Test2ongLineWriter(t *testing.T) {
 	goics.LineSize = 10
@@ -91,7 +161,7 @@ func Test2ongLineWriter(t *testing.T) {
 	fmt.Fprintf(result, " 2345678")
 
 	var str string = `1234567823456782345678`
-	encoder := goics.NewWriter(w)
+	encoder := goics.NewICalEncode(w)
 	encoder.WriteLine(str)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
@@ -100,37 +170,4 @@ func Test2ongLineWriter(t *testing.T) {
 		t.Errorf("%s!=%s %s", w, result, res)
 	}
 
-}
-
-
-func TestContentEvent(t *testing.T) {
-	goics.LineSize = 75
-	c := &goics.Event{
-		Start: time.Date(2014, time.April,   04,  0, 0, 0, 0, time.UTC),
-		End: time.Date(2014, time.April,   06,  0, 0, 0, 0, time.UTC),
-		Uid: "-kpd6p8pqal11-74iythu9giqs@xxx.com",
-		Location: "Apartamento xxxx pax en Centro",
-		Description: "test",
-	}
-	w := &bytes.Buffer{}
-	writer := goics.NewWriter(w)
-	result := &bytes.Buffer{}
-	
-	fmt.Fprintf(result, "BEGIN:VEVENT" + goics.CRLF)
-	fmt.Fprintf(result, "DTEND;VALUE=DATE:20140406" + goics.CRLF)
-	fmt.Fprintf(result, "DTSTART;VALUE=DATE:20140404" + goics.CRLF)
-	fmt.Fprintf(result, "UID:-kpd6p8pqal11-74iythu9giqs@xxx.com" + goics.CRLF)
-	fmt.Fprintf(result, "DESCRIPTION:test" + goics.CRLF)
-	fmt.Fprintf(result, "LOCATION:Apartamento xxxx pax en Centro" + goics.CRLF)
-	fmt.Fprintf(result, "END:VEVENT" + goics.CRLF)
-	
-	goics.WriteEvent(c, writer)
-	
-	res := bytes.Compare(w.Bytes(), result.Bytes())
-
-	if res != 0 {
-		t.Errorf("%s!=%s %s", w, result, res)
-	}
-
-	
 }
