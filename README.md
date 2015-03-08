@@ -1,7 +1,15 @@
 
-### just another go icalendar file encoder/decoder ics format
+### A go toolkit for decoding, encoding icalendar ics ical files
 
 Alpha status
+
+After trying to decode some .ics files and review available go packages, I decided to start writing this pacakge.
+
+First attempt was from a fixed structure, similar to that needed. Later, I started to investigate the format and discovered that it is a pain, and has many variants, depending on who implements it. For this reason I evolved it to a tookit for decode and encode the format.
+
+
+
+
 
 Features implemented:
 
