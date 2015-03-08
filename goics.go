@@ -17,7 +17,7 @@ type ICalConsumer interface {
 	ConsumeICal(d *Calendar, err error) error
 }
 
-// ICalEmiter must be implemented in order to allow objects to be serialized
+// ICalEmiter must be implemented in order to allow objects to be serialized
 // It should return a *goics.Calendar and optional a map of fields and
 // their serializers, if no serializer is defined, it will serialize as
 // string.. 
@@ -44,6 +44,8 @@ type Calendar struct {
 type Event struct {
 	Data map[string]*IcsNode
 	Alarms []*map[string]*IcsNode
+	// Stores multiple keys for the same property... ( a list )
+	List map[string][]*IcsNode
 }
 
 

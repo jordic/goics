@@ -141,6 +141,7 @@ func decodeInsideCal(d *decoder) {
 	case node.Key == vBegin && node.Val == vEvent:
 		d.currentEvent = &Event{
 			Data: make(map[string]*IcsNode),
+			List: make(map[string][]*IcsNode),
 		}
 		d.nextFn = decodeInsideEvent
 		d.prevFn = decodeInsideCal
@@ -164,7 +165,19 @@ func decodeInsideEvent(d *decoder) {
 	}
 	//@todo handle Valarm
 	//@todo handle error if we found a startevent without closing pass one
-	d.currentEvent.Data[node.Key] = node
+	// #2 handle multiple equal keys. ej. Attendee
+	// List keys already set
+	if _, ok := d.currentEvent.List[node.Key]; ok {
+		d.currentEvent.List[node.Key] = append(d.currentEvent.List[node.Key], node)
+	} else {
+		// Multiple key detected...
+		if val, ok := d.currentEvent.Data[node.Key]; ok {
+			d.currentEvent.List[node.Key] = []*IcsNode{val, node}
+			delete(d.currentEvent.Data, node.Key)
+		} else {
+			d.currentEvent.Data[node.Key] = node
+		}
+	}
 	d.next()
 
 }
