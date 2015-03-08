@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
+
 	goics "github.com/jordic/goics"
 )
 
@@ -16,6 +18,7 @@ func TestTesting(t *testing.T) {
 type Calendar struct {
 	Data map[string]string
 }
+
 func (e *Calendar) ConsumeICal(c *goics.Calendar, err error) error {
 	for k, v := range c.Data {
 		e.Data[k] = v.Val
@@ -29,7 +32,6 @@ func NewCal() *Calendar {
 	}
 }
 
-
 var source = "asdf\nasdf\nasdf"
 
 func TestEndOfFile(t *testing.T) {
@@ -41,7 +43,7 @@ func TestEndOfFile(t *testing.T) {
 	if a.Lines() != 3 {
 		t.Errorf("Decode should advance to %s", a.Lines())
 	}
-	
+
 }
 
 var test2 = `BEGIN:VCALENDAR
@@ -116,7 +118,7 @@ func TestParseLongLinesTab(t *testing.T) {
 	cons := NewCal()
 	_ = a.Decode(cons)
 	str := cons.Data["CALSCALE"]
-	
+
 	if len(str) != 81 {
 		t.Errorf("Multiline tab field test failed %s", len(str))
 	}
@@ -149,7 +151,6 @@ func TestParseLongLinesMultilinethree(t *testing.T) {
 
 }
 
-
 var valarmCt = `BEGIN:VCALENDAR
 BEGIN:VEVENT
 STATUS:CONFIRMED
@@ -178,12 +179,11 @@ func TestNotParsingValarm(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(valarmCt))
 	cons := NewCal()
 	err := a.Decode(cons)
-	
+
 	if err != nil {
 		t.Errorf("Error decoding %s", err)
 	}
 }
-
 
 func TestReadingRealFile(t *testing.T) {
 
@@ -204,8 +204,96 @@ func TestReadingRealFile(t *testing.T) {
 		t.Errorf("Wrong number of events detected %s", len(cal.Calendar.Events))
 	}
 
-	
-
 }
 
+// Multiple keys with same name...
+// From libical tests
+// https://github.com/libical/libical/blob/master/test-data/incoming.ics
 
+var dataMultipleAtendee string = `BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+X-LIC-NOTE:#I3. Updates C1
+X-LIC-EXPECT:REQUEST-UPDATE
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:Mailto:B@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED;CN=BIG A:Mailto:A@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL;CN=B:Mailto:B@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL;CN=C:Mailto:C@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL;CN=Hal:Mailto:D@example.com
+ATTENDEE;RSVP=FALSE;CUTYPE=ROOM:conf_Big@example.com
+ATTENDEE;ROLE=NON-PARTICIPANT;RSVP=FALSE:Mailto:E@example.com
+DTSTAMP:19970611T193000Z
+DTSTART:19970701T190000Z
+DTEND:19970701T193000Z
+SUMMARY: Pool party
+UID:calsrv.example.com-873970198738777@example.com
+SEQUENCE:2
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`
+
+type EventA struct {
+	Start, End  time.Time
+	Id, Summary string
+	Attendees   []string
+}
+
+type EventsA []EventA
+
+func (e *EventsA) ConsumeICal(c *goics.Calendar, err error) error {
+	for _, el := range c.Events {
+		node := el.Data
+		dtstart, err := node["DTSTART"].DateDecode()
+		if err != nil {
+			return err
+		}
+		dtend, err := node["DTEND"].DateDecode()
+		if err != nil {
+			return err
+		}
+		d := EventA{
+			Start:   dtstart,
+			End:     dtend,
+			Id:      node["UID"].Val,
+			Summary: node["SUMMARY"].Val,
+		}
+		// Get Atendees
+		if val, ok := el.List["ATTENDEE"]; ok {
+			d.Attendees = make([]string, 0)
+			for _, n := range val {
+
+				d.Attendees = append(d.Attendees, n.Val)
+			}
+		}
+
+		*e = append(*e, d)
+	}
+	return nil
+}
+
+func TestDataMultipleAtendee(t *testing.T) {
+
+	d := goics.NewDecoder(strings.NewReader(dataMultipleAtendee))
+	consumer := EventsA{}
+	err := d.Decode(&consumer)
+	if err != nil {
+		t.Error("Error decoding events")
+	}
+	if len(consumer) != 1 {
+		t.Error("Wrong size of consumer list..")
+	}
+
+	if len(consumer[0].Attendees) != 6 {
+		t.Errorf("Wrong list of atendees detectet %d", len(consumer[0].Attendees))
+	}
+
+	att := consumer[0].Attendees[0]
+	if att != "Mailto:A@example.com" {
+		t.Errorf("Atendee list should be %s", att)
+	}
+	
+	
+	
+}
