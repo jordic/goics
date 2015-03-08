@@ -3,9 +3,7 @@ package goics
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
-	"reflect"
 	"strings"
 )
 
@@ -25,8 +23,6 @@ var (
 	VParseEndCalendar = errors.New("wrong format END:VCALENDAR not Found")
 )
 
-
-
 type decoder struct {
 	scanner      *bufio.Scanner
 	err          error
@@ -43,7 +39,7 @@ type stateFn func(*decoder)
 
 func NewDecoder(r io.Reader) *decoder {
 	d := &decoder{
-		scanner: bufio.NewScanner(r),
+		scanner:  bufio.NewScanner(r),
 		nextFn:   decodeInit,
 		line:     0,
 		buffered: "",
@@ -65,66 +61,10 @@ func (d *decoder) Decode(c ICalConsumer) error {
 	if d.err != nil {
 		return d.err
 	}
-	
+
 	d.err = c.ConsumeICal(d.Calendar, d.err)
 	return d.err
 }
-
-// Decode events should decode events found in buff
-// into a slice of passed struct &Event
-// Idealy struct should add mapping capabilities in tag strings
-// like:
-//
-// type Event struct {
-//		ID string `ics:"UID"`
-//		Start time.Time `ics:"DTSTART"`
-// }
-// v must be a slice of []*Event
-//
-func (d *decoder) DecodeEvents(dest interface{}) error {
-	err := d.Decode()
-	if err != nil {
-		return err
-	}
-	
-	dt := reflect.ValueOf(dest).Elem()
-	direct := reflect.Indirect( reflect.ValueOf(dest) )
-	fmt.Println( dt.Kind() )
-	if dt.Kind() == reflect.Slice {
-		tipo := dt.Type().Elem()
-		eventitem := reflect.New(tipo)
-		item := eventitem.Elem()
-		for _, ev := range d.Calendar.Events {
-			for i:=0; i<tipo.NumField(); i++ {
-				typeField := tipo.Field(i)
-				if strings.ToLower(typeField.Name) == "dtstart" {
-					item.Field(i).Set( reflect.ValueOf(ev.Start) )
-				}
-				fmt.Printf("Field Name %s, field type %s\n", typeField.Name, typeField)
-			}
-			direct.Set(reflect.Append(dt, item))
-			fmt.Println(dt)
-		}
-	}
-	/*to := reflect.Indirect(reflect.ValueOf(v))
-	
-		tipo := reflect.ValueOf(v).Type()
-		fmt.Println(tipo)
-		fmt.Println("Is a slice", to.Type().Elem() )
-		if len(d.Calendar.Events) == 0 {
-			return nil			
-		}
-		//
-			for i:=0; i<tipo.NumField(); i++ {
-				typeField := tipo.Field(i)
-				fmt.Println("Field Name %s, field type %s", typeField.Name, typeField)
-			}
-		//}
-	}*/
-	return nil
-}
-
-
 
 // Lines processed. If Decoder reports an error.
 // Error
@@ -223,7 +163,7 @@ func decodeInsideEvent(d *decoder) {
 		return
 	}
 	//@todo handle Valarm
-	//@todo handle error if we found a startevent without closing pass one	
+	//@todo handle error if we found a startevent without closing pass one
 	d.currentEvent.Data[node.Key] = node
 	d.next()
 
