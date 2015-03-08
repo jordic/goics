@@ -7,68 +7,85 @@ This is a toolkit because user has to define the way it needs the data. The idea
 
 We want to decode a stream of vevents from a .ics file into a custom type Events
 
-type Event struct {
-	Start, End  time.Time
-	Id, Summary string
-}
-
-type Events []Event
-
-func (e *Events) ConsumeICal(c *goics.Calendar, err error) error {
-	for _, el := range c.Events {
-		node := el.Data
-		dtstart, err := node["DTSTART"].DateDecode()
-		if err != nil {
-			return err
-		}
-		dtend, err := node["DTEND"].DateDecode()
-		if err != nil {
-			return err
-		}
-		d := Event{
-			Start:   dtstart,
-			End:     dtend,
-			Id:      node["UID"].Val,
-			Summary: node["SUMMARY"].Val,
-		}
-		*e = append(*e, d)
+	type Event struct {
+		Start, End  time.Time
+		Id, Summary string
 	}
-	return nil
-}
+	
+	type Events []Event
+	
+	func (e *Events) ConsumeICal(c *goics.Calendar, err error) error {
+		for _, el := range c.Events {
+			node := el.Data
+			dtstart, err := node["DTSTART"].DateDecode()
+			if err != nil {
+				return err
+			}
+			dtend, err := node["DTEND"].DateDecode()
+			if err != nil {
+				return err
+			}
+			d := Event{
+				Start:   dtstart,
+				End:     dtend,
+				Id:      node["UID"].Val,
+				Summary: node["SUMMARY"].Val,
+			}
+			*e = append(*e, d)
+		}
+		return nil
+	}
 
 Our custom type, will need to implement ICalConsumer interface, where, 
 the type will pick up data from the format.
 The decoding process will be somthing like this:
 
 
-d := goics.NewDecoder(strings.NewReader(testConsumer))
-consumer := Events{}
-err := d.Decode(&consumer)
+	d := goics.NewDecoder(strings.NewReader(testConsumer))
+	consumer := Events{}
+	err := d.Decode(&consumer)
+
 
 I have choosed this model, because, this format is a pain and also I don't like a lot the reflect package.
 
 For encoding objects to iCal format, something similar has to be done:
 
 The object emitting elements for the encoder, will have to implement the ICalEmiter
-type EventTest struct {
-	component goics.Componenter
-}
 
-func (evt *EventTest) EmitICal() goics.Componenter {
-	return evt.component
-}
+	type EventTest struct {
+		component goics.Componenter
+	}
+	
+	func (evt *EventTest) EmitICal() goics.Componenter {
+		return evt.component
+	}
+
 
 The Componenter, is an interface that every Component that can be encoded to ical implements.
 
-c := goics.NewComponent()
-c.SetType("VCALENDAR")
-c.AddProperty("CALSCAL", "GREGORIAN")
-c.AddProperty("PRODID", "-//tmpo.io/src/goics")
+	c := goics.NewComponent()
+	c.SetType("VCALENDAR")
+	c.AddProperty("CALSCAL", "GREGORIAN")
+	c.AddProperty("PRODID", "-//tmpo.io/src/goics")
+	
+	m := goics.NewComponent()
+	m.SetType("VEVENT")
+	m.AddProperty("UID", "testing")
+	c.AddComponent(m)
 
-m := goics.NewComponent()
-m.SetType("VEVENT")
-m.AddProperty("UID", "testing")
-c.AddComponent(m)
+A simple example not functional used for testing:
+
+	c := goics.NewComponent()
+	c.SetType("VCALENDAR")
+	c.AddProperty("CALSCAL", "GREGORIAN")
+
+	ins := &EventTest{
+		component: c,
+	}
+
+	w := &bytes.Buffer{}
+	enc := goics.NewICalEncode(w)
+	enc.Encode(ins)
 
 
 */
