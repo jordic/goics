@@ -50,7 +50,9 @@ I have choosed this model, because, this format is a pain and also I don't like 
 
 For encoding objects to iCal format, something similar has to be done:
 
-The object emitting elements for the encoder, will have to implement the ICalEmiter
+The object emitting elements for the encoder, will have to implement the ICalEmiter, returning a Component structure to be encoded. 
+This also had been done, because every package could require to encode vals and keys their way. Just for encoding time, I found more than
+three types of lines.
 
 	type EventTest struct {
 		component goics.Componenter
@@ -72,6 +74,10 @@ The Componenter, is an interface that every Component that can be encoded to ica
 	m.SetType("VEVENT")
 	m.AddProperty("UID", "testing")
 	c.AddComponent(m)
+
+Properties, had to be stored as strings, the conversion from origin type to string format, must be done,
+on the emmiter. There are some helpers for date conversion and on the future I will add more, for encoding
+params on the string, and also for handling lists and recurrent events.
 
 A simple example not functional used for testing:
 
