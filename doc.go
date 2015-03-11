@@ -11,9 +11,9 @@ We want to decode a stream of vevents from a .ics file into a custom type Events
 		Start, End  time.Time
 		Id, Summary string
 	}
-	
+
 	type Events []Event
-	
+
 	func (e *Events) ConsumeICal(c *goics.Calendar, err error) error {
 		for _, el := range c.Events {
 			node := el.Data
@@ -36,7 +36,7 @@ We want to decode a stream of vevents from a .ics file into a custom type Events
 		return nil
 	}
 
-Our custom type, will need to implement ICalConsumer interface, where, 
+Our custom type, will need to implement ICalConsumer interface, where,
 the type will pick up data from the format.
 The decoding process will be somthing like this:
 
@@ -50,14 +50,14 @@ I have choosed this model, because, this format is a pain and also I don't like 
 
 For encoding objects to iCal format, something similar has to be done:
 
-The object emitting elements for the encoder, will have to implement the ICalEmiter, returning a Component structure to be encoded. 
+The object emitting elements for the encoder, will have to implement the ICalEmiter, returning a Component structure to be encoded.
 This also had been done, because every package could require to encode vals and keys their way. Just for encoding time, I found more than
 three types of lines.
 
 	type EventTest struct {
 		component goics.Componenter
 	}
-	
+
 	func (evt *EventTest) EmitICal() goics.Componenter {
 		return evt.component
 	}
@@ -69,7 +69,7 @@ The Componenter, is an interface that every Component that can be encoded to ica
 	c.SetType("VCALENDAR")
 	c.AddProperty("CALSCAL", "GREGORIAN")
 	c.AddProperty("PRODID", "-//tmpo.io/src/goics")
-	
+
 	m := goics.NewComponent()
 	m.SetType("VEVENT")
 	m.AddProperty("UID", "testing")

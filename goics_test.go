@@ -1,16 +1,16 @@
 package goics_test
 
 import (
-	goics "github.com/jordic/goics"
-	//"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	goics "github.com/jordic/goics"
 )
 
 type Event struct {
 	Start, End  time.Time
-	Id, Summary string
+	ID, Summary string
 }
 
 type Events []Event
@@ -29,7 +29,7 @@ func (e *Events) ConsumeICal(c *goics.Calendar, err error) error {
 		d := Event{
 			Start:   dtstart,
 			End:     dtend,
-			Id:      node["UID"].Val,
+			ID:      node["UID"].Val,
 			Summary: node["SUMMARY"].Val,
 		}
 		*e = append(*e, d)
@@ -51,12 +51,12 @@ func TestConsumer(t *testing.T) {
 	if consumer[0].Start != time.Date(2014, time.April, 06, 0, 0, 0, 0, time.UTC) {
 		t.Error("Expected", consumer[0].Start)
 	}
-	if consumer[0].Id != "-kpd6p8pqal11-n66f1wk1tw76@xxxx.com" {
+	if consumer[0].ID != "-kpd6p8pqal11-n66f1wk1tw76@xxxx.com" {
 		t.Errorf("Error decoding text")
 	}
 }
 
-var testConsumer string = `BEGIN:VCALENDAR
+var testConsumer = `BEGIN:VCALENDAR
 PRODID;X-RICAL-TZSOURCE=TZINFO:-//test//EN
 CALSCALE:GREGORIAN
 VERSION:2.0

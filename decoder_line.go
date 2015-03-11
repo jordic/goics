@@ -16,7 +16,7 @@ type IcsNode struct {
 	Params map[string]string
 }
 
-// how many params has a token
+// ParamsLen returns how many params has a token
 func (n *IcsNode) ParamsLen() int {
 	if n.Params == nil {
 		return 0
@@ -24,8 +24,9 @@ func (n *IcsNode) ParamsLen() int {
 	return len(n.Params)
 }
 
-// If only has one extra param, returns it..
-// as key, val
+// GetOneParam resturns the first param found
+// usefull when you know that there is a only
+// one param token
 func (n *IcsNode) GetOneParam() (string, string) {
 	if n.ParamsLen() == 0 {
 		return "", ""
@@ -38,8 +39,7 @@ func (n *IcsNode) GetOneParam() (string, string) {
 	return key, val
 }
 
-// Decodes a line extracting key, val and extra params
-// linked to key..
+// DecodeLine extracts key, val and extra params from a line
 func DecodeLine(line string) *IcsNode {
 	if strings.Contains(line, keySep) == false {
 		return &IcsNode{}
@@ -51,58 +51,56 @@ func DecodeLine(line string) *IcsNode {
 			Key: key,
 			Val: val,
 		}
-	} else {
-		// Extract key
-		first_param := strings.Index(key, vParamSep)
-		real_key := key[0:first_param]
-		n := &IcsNode{
-			Key: real_key,
-			Val: val,
-		}
-		// Extract params
-		params := key[first_param+1:]
-		n.Params = decode_params(params)
-		return n
+	} 
+	// Extract key
+	firstParam := strings.Index(key, vParamSep)
+	realkey := key[0:firstParam]
+	n := &IcsNode{
+		Key: realkey,
+		Val: val,
 	}
-	return nil
+	// Extract params
+	params := key[firstParam+1:]
+	n.Params = decodeParams(params)
+	return n
 }
 
 // decode extra params linked in key val in the form
 // key;param1=val1:val
-func decode_params(arr string) map[string]string {
+func decodeParams(arr string) map[string]string {
 
 	p := make(map[string]string)
-	var is_quoted = false
-	var is_param bool = true
-	var cur_param string
-	var cur_val string
+	var isQuoted = false
+	var isParam = true
+	var curParam string
+	var curVal string
 	for _, c := range arr {
 		switch {
 		// if string is quoted, wait till next quote
 		// and capture content
 		case c == '"':
-			if is_quoted == false {
-				is_quoted = true
+			if isQuoted == false {
+				isQuoted = true
 			} else {
-				p[cur_param] = cur_val
-				is_quoted = false
+				p[curParam] = curVal
+				isQuoted = false
 			}
-		case c == '=' && is_quoted == false:
-			is_param = false
-		case c == ';' && is_quoted == false:
-			is_param = true
-			p[cur_param] = cur_val
-			cur_param = ""
-			cur_val = ""
+		case c == '=' && isQuoted == false:
+			isParam = false
+		case c == ';' && isQuoted == false:
+			isParam = true
+			p[curParam] = curVal
+			curParam = ""
+			curVal = ""
 		default:
-			if is_param {
-				cur_param = cur_param + string(c)
+			if isParam {
+				curParam = curParam + string(c)
 			} else {
-				cur_val = cur_val + string(c)
+				curVal = curVal + string(c)
 			}
 		}
 	}
-	p[cur_param] = cur_val
+	p[curParam] = curVal
 	return p
 
 }

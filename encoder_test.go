@@ -60,7 +60,7 @@ func TestWritingSimple(t *testing.T) {
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
 	if res != 0 {
-		t.Errorf("%s!=%s %s", w, result, res)
+		t.Errorf("%s!=%s %d", w, result, res)
 
 	}
 
@@ -105,7 +105,7 @@ func TestDateTimeFormat(t *testing.T) {
 	}
 }
 
-var shortLine string = `asdf defined is a test\n\r`
+var shortLine = `asdf defined is a test\n\r`
 
 func TestLineWriter(t *testing.T) {
 
@@ -125,7 +125,7 @@ func TestLineWriter(t *testing.T) {
 
 }
 
-var longLine string = `As returned by NewWriter, a Writer writes records terminated by thisisat test that is expanded in multi lines` + goics.CRLF
+var longLine = `As returned by NewWriter, a Writer writes records terminated by thisisat test that is expanded in multi lines` + goics.CRLF
 
 func TestLineWriterLongLine(t *testing.T) {
 
@@ -143,7 +143,7 @@ func TestLineWriterLongLine(t *testing.T) {
 	res := bytes.Compare(w.Bytes(), result.Bytes())
 
 	if res != 0 {
-		t.Errorf("%s!=%s %s", w, result, res)
+		t.Errorf("%s!=%s %d", w, result, res)
 	}
 }
 
@@ -160,14 +160,14 @@ func Test2ongLineWriter(t *testing.T) {
 	fmt.Fprintf(result, goics.CRLF)
 	fmt.Fprintf(result, " 2345678")
 
-	var str string = `1234567823456782345678`
+	var str = `1234567823456782345678`
 	encoder := goics.NewICalEncode(w)
 	encoder.WriteLine(str)
 
 	res := bytes.Compare(w.Bytes(), result.Bytes())
 
 	if res != 0 {
-		t.Errorf("%s!=%s %s", w, result, res)
+		t.Errorf("%s!=%s %d", w, result, res)
 	}
 
 }

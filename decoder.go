@@ -19,8 +19,8 @@ const (
 
 // Errors
 var (
-	VCalendarNotFound = errors.New("vCalendar not found")
-	VParseEndCalendar = errors.New("wrong format END:VCALENDAR not Found")
+	ErrCalendarNotFound = errors.New("vCalendar not found")
+	ErrParseEndCalendar = errors.New("wrong format END:VCALENDAR not Found")
 )
 
 type decoder struct {
@@ -36,7 +36,7 @@ type decoder struct {
 }
 
 type stateFn func(*decoder)
-
+// NewDecoder creates an instance of de decoder
 func NewDecoder(r io.Reader) *decoder {
 	d := &decoder{
 		scanner:  bufio.NewScanner(r),
@@ -50,13 +50,13 @@ func NewDecoder(r io.Reader) *decoder {
 func (d *decoder) Decode(c ICalConsumer) error {
 	d.next()
 	if d.Calendar == nil {
-		d.err = VCalendarNotFound
+		d.err = ErrCalendarNotFound
 		d.Calendar = &Calendar{}
 	}
 	// If theres no error but, nextFn is not reset
 	// last element not closed
 	if d.nextFn != nil && d.err == nil {
-		d.err = VParseEndCalendar
+		d.err = ErrParseEndCalendar
 	}
 	if d.err != nil {
 		return d.err
@@ -96,8 +96,8 @@ func (d *decoder) next() {
 	}
 
 	if len(d.current) > 65 {
-		is_continuation := true
-		for is_continuation == true {
+		isContinuation := true
+		for isContinuation == true {
 			res := d.scanner.Scan()
 			d.line++
 			if true != res {
@@ -111,7 +111,7 @@ func (d *decoder) next() {
 				// If is not a continuation line, buffer it, for the
 				// next call.
 				d.buffered = line
-				is_continuation = false
+				isContinuation = false
 			}
 		}
 	}

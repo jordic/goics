@@ -20,7 +20,7 @@ var (
 )
 
 var config struct {
-	Dsn           string "json:dsn"
+	Dsn           string `json:"dsn"`
 	ServerAddress string
 }
 
@@ -52,7 +52,7 @@ func Version(w http.ResponseWriter, r *http.Request) {
 }
 
 func LimpiezaHandler(w http.ResponseWriter, r *http.Request) {
-	
+
 	log.Print("Calendar request")
 	// Setup headers for the calendar
 	w.Header().Set("Content-type", "text/calendar")

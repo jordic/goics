@@ -3,10 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jordic/goics"
 	"log"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jordic/goics"
 )
 
 // We define our struct as mysql row
@@ -19,10 +20,11 @@ type Reserva struct {
 	Llegada    sql.NullString `db:"llegada"`
 	Client     string         `db:"client"`
 }
+
 // A collection of rous
 type ReservasCollection []*Reserva
 
-// We implement ICalEmiter interface that will return a goics.Componenter. 
+// We implement ICalEmiter interface that will return a goics.Componenter.
 func (rc ReservasCollection) EmitICal() goics.Componenter {
 
 	c := goics.NewComponent()
@@ -50,6 +52,7 @@ func (rc ReservasCollection) EmitICal() goics.Componenter {
 	return c
 
 }
+
 // Get data from database populating ReservasCollection
 func GetReservas() ReservasCollection {
 

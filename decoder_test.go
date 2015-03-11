@@ -37,7 +37,7 @@ var source = "asdf\nasdf\nasdf"
 func TestEndOfFile(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(source))
 	err := a.Decode(&Calendar{})
-	if err != goics.VCalendarNotFound {
+	if err != goics.ErrCalendarNotFound {
 		t.Errorf("Decode filed, decode raised %s", err)
 	}
 	if a.Lines() != 3 {
@@ -77,7 +77,7 @@ VERSION:2.`
 func TestDetectIncompleteCalendar(t *testing.T) {
 	a := goics.NewDecoder(strings.NewReader(test3))
 	err := a.Decode(&Calendar{})
-	if err != goics.VParseEndCalendar {
+	if err != goics.ErrParseEndCalendar {
 		t.Error("Test failed")
 	}
 
@@ -97,7 +97,7 @@ func TestParseLongLines(t *testing.T) {
 	_ = a.Decode(cons)
 	str := cons.Data["CALSCALE"]
 	if len(str) != 81 {
-		t.Errorf("Multiline test failed %s", len(cons.Data["CALSCALE"]))
+		t.Errorf("Multiline test failed %d", len(cons.Data["CALSCALE"]))
 	}
 	if strings.Contains("str", " ") {
 		t.Error("Not handling correct begining of line")
@@ -120,7 +120,7 @@ func TestParseLongLinesTab(t *testing.T) {
 	str := cons.Data["CALSCALE"]
 
 	if len(str) != 81 {
-		t.Errorf("Multiline tab field test failed %s", len(str))
+		t.Errorf("Multiline tab field test failed %d", len(str))
 	}
 	if strings.Contains("str", "\t") {
 		t.Error("Not handling correct begining of line")
@@ -143,7 +143,7 @@ func TestParseLongLinesMultilinethree(t *testing.T) {
 	_ = a.Decode(cons)
 	str := cons.Data["CALSCALE"]
 	if len(str) != 151 {
-		t.Errorf("Multiline (3lines) tab field test failed %s", len(str))
+		t.Errorf("Multiline (3lines) tab field test failed %d", len(str))
 	}
 	if strings.Contains("str", "\t") {
 		t.Error("Not handling correct begining of line")
@@ -210,7 +210,7 @@ func TestReadingRealFile(t *testing.T) {
 // From libical tests
 // https://github.com/libical/libical/blob/master/test-data/incoming.ics
 
-var dataMultipleAtendee string = `BEGIN:VCALENDAR
+var dataMultipleAtendee = `BEGIN:VCALENDAR
 PRODID:-//ACME/DesktopCalendar//EN
 METHOD:REQUEST
 X-LIC-NOTE:#I3. Updates C1
@@ -236,7 +236,7 @@ END:VCALENDAR`
 
 type EventA struct {
 	Start, End  time.Time
-	Id, Summary string
+	ID, Summary string
 	Attendees   []string
 }
 
@@ -256,7 +256,7 @@ func (e *EventsA) ConsumeICal(c *goics.Calendar, err error) error {
 		d := EventA{
 			Start:   dtstart,
 			End:     dtend,
-			Id:      node["UID"].Val,
+			ID:      node["UID"].Val,
 			Summary: node["SUMMARY"].Val,
 		}
 		// Get Atendees
@@ -293,7 +293,5 @@ func TestDataMultipleAtendee(t *testing.T) {
 	if att != "Mailto:A@example.com" {
 		t.Errorf("Atendee list should be %s", att)
 	}
-	
-	
-	
+
 }
