@@ -2,6 +2,7 @@ package goics
 
 import (
 	"io"
+	"sort"
 	"strings"
 	"time"
 )
@@ -35,11 +36,18 @@ type Component struct {
 // Writes the component to the Writer
 func (c *Component) Write(w *ICalEncode) {
 	w.WriteLine("BEGIN:" + c.Tipo + CRLF)
-	// Iterate over component properites
-	for key, val := range c.Properties {
-		w.WriteLine(WriteStringField(key, val))
 
+	// Iterate over component properites
+	var keys []string
+	for k := range c.Properties {
+		keys = append(keys, k)
 	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		val := c.Properties[key]
+		w.WriteLine(WriteStringField(key, val))
+	}
+
 	for _, xc := range c.Elements {
 		xc.Write(w)
 	}
@@ -136,5 +144,6 @@ func quoteString(s string) string {
 	s = strings.Replace(s, "\\,", ",", -1)
 	s = strings.Replace(s, "\\n", "\n", -1)
 	s = strings.Replace(s, "\\\\", "\\", -1)
+
 	return s
 }
