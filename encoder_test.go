@@ -147,10 +147,9 @@ func TestLineWriterLongLine(t *testing.T) {
 	}
 }
 
-
 func Test2ongLineWriter(t *testing.T) {
 	goics.LineSize = 10
-	
+
 	w := &bytes.Buffer{}
 
 	result := &bytes.Buffer{}
