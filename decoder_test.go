@@ -41,7 +41,7 @@ func TestEndOfFile(t *testing.T) {
 		t.Errorf("Decode filed, decode raised %s", err)
 	}
 	if a.Lines() != 3 {
-		t.Errorf("Decode should advance to %s", a.Lines())
+		t.Errorf("Decode should advance to %d", a.Lines())
 	}
 
 }
@@ -201,7 +201,7 @@ func TestReadingRealFile(t *testing.T) {
 	}
 
 	if len(cal.Calendar.Events) != 28 {
-		t.Errorf("Wrong number of events detected %s", len(cal.Calendar.Events))
+		t.Errorf("Wrong number of events detected %d", len(cal.Calendar.Events))
 	}
 
 }
