@@ -314,3 +314,44 @@ func TestDataMultipleAtendee(t *testing.T) {
 	}
 
 }
+
+var dataMultiline = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+ORGANIZER:Mailto:B@example.com
+ATTENDEE;
+ ROLE=CHAIR;
+  PARTSTAT
+   =ACCEPTED;CN=
+    BIG A
+	 :Mailto:A@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL;
+ CN=B:Mailto:B@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL;CN=C:Mailto:C@example.com
+DTSTAMP:19970611T193000Z
+DTSTART:19970701T190000Z
+DTEND:19970701T193000Z
+UID:calsrv.example.com-873970198738777@example.com
+SUMMARY: Pool party
+END:VEVENT
+END:VCALENDAR`
+
+func TestMulitine(t *testing.T) {
+
+	d := goics.NewDecoder(strings.NewReader(dataMultiline))
+	consumer := EventsA{}
+	err := d.Decode(&consumer)
+	if err != nil {
+		t.Errorf("Error decoding events %+v", err)
+	}
+	if len(consumer) != 1 {
+		t.Error("Wrong size of consumer list..")
+	}
+
+	if size := len(consumer[0].Attendees); size != 3 {
+		t.Errorf("Wrong size of attendees detected %d", size)
+	}
+
+	if att := consumer[0].Attendees[0]; att != "Mailto:A@example.com" {
+		t.Errorf("Attendees list should be %s", att)
+	}
+}
