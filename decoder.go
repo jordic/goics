@@ -95,26 +95,20 @@ func (d *decoder) next() {
 		d.buffered = ""
 	}
 
-	if len(d.current) > 65 {
-		isContinuation := true
-		for isContinuation == true {
-			res := d.scanner.Scan()
-			d.line++
-			if true != res {
-				d.err = d.scanner.Err()
-				return
-			}
-			line := d.scanner.Text()
-			if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
-				d.current = d.current + line[1:]
-			} else {
-				// If is not a continuation line, buffer it, for the
-				// next call.
-				d.buffered = line
-				isContinuation = false
-			}
+	for d.scanner.Scan() {
+		d.line++
+		line := d.scanner.Text()
+		if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+			d.current = d.current + line[1:]
+		} else {
+			// If is not a continuation line, buffer it, for the
+			// next call.
+			d.buffered = line
+			break
 		}
 	}
+
+	d.err = d.scanner.Err()
 
 	if d.nextFn != nil {
 		d.nextFn(d)
