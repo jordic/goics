@@ -185,6 +185,25 @@ func TestNotParsingValarm(t *testing.T) {
 	}
 }
 
+var testEscapeValue = `BEGIN:VCALENDAR
+X-TEST:one\, two\, three\n\Nfour\;five\\six
+END:VCALENDAR`
+
+func TestUnescapeValue(t *testing.T) {
+	a := goics.NewDecoder(strings.NewReader(testEscapeValue))
+	cons := NewCal()
+	err := a.Decode(cons)
+
+	if err != nil {
+		t.Errorf("Error decoding %s", err)
+	}
+
+	expected := "one, two, three\n\nfour;five\\six"
+	if actual := cons.Data["X-TEST"]; expected != actual {
+		t.Errorf("unexpected summary: %q", actual)
+	}
+}
+
 func TestReadingRealFile(t *testing.T) {
 
 	file, err := os.Open("fixtures/test.ics")
