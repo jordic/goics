@@ -51,7 +51,7 @@ func DecodeLine(line string) *IcsNode {
 			Key: key,
 			Val: val,
 		}
-	} 
+	}
 	// Extract key
 	firstParam := strings.Index(key, vParamSep)
 	realkey := key[0:firstParam]
@@ -108,5 +108,13 @@ func decodeParams(arr string) map[string]string {
 // Returns a key, val... for a line..
 func getKeyVal(s string) (key, value string) {
 	p := strings.SplitN(s, keySep, 2)
-	return p[0], p[1]
+	return p[0], icsReplacer.Replace(p[1])
 }
+
+var icsReplacer = strings.NewReplacer(
+	`\,`, ",",
+	`\;`, ";",
+	`\\`, `\`,
+	`\n`, "\n",
+	`\N`, "\n",
+)
