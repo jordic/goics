@@ -46,6 +46,22 @@ func TestEndOfFile(t *testing.T) {
 
 }
 
+var sourceEOFMultiline = `BEGIN:VCALENDAR
+VERSION:2.0
+ FOO
+  BAR
+   BAR
+`
+
+func TestEndOfFileMultiline(t *testing.T) {
+	a := goics.NewDecoder(strings.NewReader(sourceEOFMultiline))
+	a.Decode(&Calendar{})
+	if expected := 5; a.Lines() != expected {
+		t.Errorf("Decode should advance to %d but %d is returned", expected, a.Lines())
+	}
+
+}
+
 var test2 = `BEGIN:VCALENDAR
 PRODID;X-RICAL-TZSOURCE=TZINFO:-//test//EN
 CALSCALE:GREGORIAN
