@@ -131,7 +131,7 @@ func FormatDateTimeField(key string, val time.Time) (string, string) {
 
 // FormatDateTime as "DTSTART:19980119T070000Z"
 func FormatDateTime(key string, val time.Time) (string, string) {
-	return key, val.Format("20060102T150405Z")
+	return key, val.UTC().Format("20060102T150405Z")
 }
 
 // WriteStringField UID:asdfasdfаs@dfasdf.com
