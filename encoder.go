@@ -102,21 +102,21 @@ func (enc *ICalEncode) WriteLine(s string) {
 		io.WriteString(enc.w, s)
 		return
 	}
-	length := len(s)
-	current := 0
-	// LineSize -2 is CRLF
-	shortLine := LineSize - 2
-	// First line write from 0 to totalline - 2 ( must include CRLFS)
-	io.WriteString(enc.w, s[current:current+(shortLine)]+CRLFSP)
-	current = shortLine
-	// Rest of lines, we must include ^space at begining for marquing
-	// continuation lines
-	for (current + shortLine) <= length {
-		io.WriteString(enc.w, s[current:current+(shortLine-1)]+CRLFSP)
-		current += shortLine - 1
+
+	// The first line does not begin with a space.
+	firstLine := truncateString(s, LineSize-len(CRLF))
+	io.WriteString(enc.w, firstLine+CRLF)
+
+	// Reserve three bytes for space + CRLF.
+	lines := splitLength(s[len(firstLine):], LineSize-len(CRLFSP))
+	for i, line := range lines {
+		if i < len(lines)-1 {
+			io.WriteString(enc.w, " "+line+CRLF)
+		} else {
+			// This is the last line, don't append CRLF.
+			io.WriteString(enc.w, " "+line)
+		}
 	}
-	// Also we need to write the reminder
-	io.WriteString(enc.w, s[current:length])
 }
 
 // FormatDateField returns a formated date: "DTEND;VALUE=DATE:20140406"
