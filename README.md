@@ -4,6 +4,8 @@
 Alpha status
 
 [![Build Status](https://travis-ci.org/jordic/goics.svg?branch=master)](https://travis-ci.org/jordic/goics)
+[![go doc](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://travis-ci.org/jordic/goics.svg?branch=master)
+ 
 
 After trying to decode some .ics files and review available go packages, I decided to start writing this pacakge.
 
