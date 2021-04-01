@@ -36,6 +36,7 @@ type decoder struct {
 }
 
 type stateFn func(*decoder)
+
 // NewDecoder creates an instance of de decoder
 func NewDecoder(r io.Reader) *decoder {
 	d := &decoder{
