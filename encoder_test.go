@@ -16,13 +16,14 @@ func TestComponentCreation(t *testing.T) {
 	c.AddProperty("CALSCAL", "GREGORIAN")
 	c.AddProperty("PRODID", "-//tmpo.io/src/goics")
 
-	if c.Properties["CALSCAL"] != "GREGORIAN" {
-		t.Error("Error setting property")
+	if c.Properties["CALSCAL"][0] != "GREGORIAN" {
+		t.Error("Error adding property")
 	}
 
 	m := goics.NewComponent()
 	m.SetType("VEVENT")
-	m.AddProperty("UID", "testing")
+	m.AddProperty("UID", "testing1")
+	m.AddProperty("UID", "testing2") // Not that you'd ever _want_ to have multiple UIDs but for testing this is fine.
 
 	c.AddComponent(m)
 
@@ -30,6 +31,20 @@ func TestComponentCreation(t *testing.T) {
 		t.Error("Error adding a component")
 	}
 
+	ins := &EventTest{
+		component: c,
+	}
+
+	w := &bytes.Buffer{}
+	enc := goics.NewICalEncode(w)
+	enc.Encode(ins)
+
+	want := "BEGIN:VCALENDAR\r\nCALSCAL:GREGORIAN\r\nPRODID:-//tmpo.io/src/goics\r\nBEGIN:VEVENT\r\nUID:testing1\r\nUID:testing2\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+	got := w.String()
+
+	if got != want {
+		t.Errorf("encoded value mismatch:\ngot:\n%s\n\nwant:\n%s", got, want)
+	}
 }
 
 type EventTest struct {
