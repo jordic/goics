@@ -21,7 +21,7 @@ const (
 func NewComponent() *Component {
 	return &Component{
 		Elements:   make([]Componenter, 0),
-		Properties: make(map[string]string),
+		Properties: make(map[string][]string),
 	}
 }
 
@@ -30,22 +30,24 @@ func NewComponent() *Component {
 type Component struct {
 	Tipo       string
 	Elements   []Componenter
-	Properties map[string]string
+	Properties map[string][]string
 }
 
 // Writes the component to the Writer
 func (c *Component) Write(w *ICalEncode) {
 	w.WriteLine("BEGIN:" + c.Tipo + CRLF)
 
-	// Iterate over component properites
+	// Iterate over component properties
 	var keys []string
 	for k := range c.Properties {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		val := c.Properties[key]
-		w.WriteLine(WriteStringField(key, val))
+		vals := c.Properties[key]
+		for _, val := range vals {
+			w.WriteLine(WriteStringField(key, val))
+		}
 	}
 
 	for _, xc := range c.Elements {
@@ -67,9 +69,9 @@ func (c *Component) AddComponent(cc Componenter) {
 	c.Elements = append(c.Elements, cc)
 }
 
-// AddProperty ads a property to the component
+// AddProperty adds a property to the component.
 func (c *Component) AddProperty(key string, val string) {
-	c.Properties[key] = val
+	c.Properties[key] = append(c.Properties[key], val)
 }
 
 // ICalEncode is the real writer, that wraps every line,
