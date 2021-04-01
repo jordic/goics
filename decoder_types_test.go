@@ -1,10 +1,8 @@
 package goics
 
 import (
-	
 	"testing"
 	"time"
-	
 )
 
 var datesTested = []string{
@@ -20,19 +18,17 @@ func getTimezone(zone string) *time.Location {
 	return t
 }
 
-
-var timesExpected =[]time.Time{
-	time.Date(2014, time.April,   06,  0, 0, 0, 0, time.UTC),
+var timesExpected = []time.Time{
+	time.Date(2014, time.April, 06, 0, 0, 0, 0, time.UTC),
 	time.Date(2014, time.January, 16, 12, 0, 0, 0, getTimezone("Europe/Paris")),
-	time.Date(2012, time.September,01,  13, 0, 0, 0, time.UTC),
-	time.Date(1998, time.January, 19,  07, 0, 0, 0, time.UTC),
+	time.Date(2012, time.September, 01, 13, 0, 0, 0, time.UTC),
+	time.Date(1998, time.January, 19, 07, 0, 0, 0, time.UTC),
 }
-
 
 func TestDateDecode(t *testing.T) {
 
-	for i, d :=	range datesTested {
-		
+	for i, d := range datesTested {
+
 		node := DecodeLine(d)
 		res, err := node.DateDecode()
 		if err != nil {
@@ -44,7 +40,7 @@ func TestDateDecode(t *testing.T) {
 		if res.String() != timesExpected[i].String() {
 			t.Errorf("Error parsing time %s expected %s", res, timesExpected[i])
 		}
-	
+
 	}
 
 }
