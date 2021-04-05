@@ -9,9 +9,7 @@ After trying to decode some .ics files and review available go packages, I decid
 
 First attempt was from a fixed structure, similar to that needed. Later, I started to investigate the format and discovered that it is a pain, and has many variants, depending on who implements it. For this reason I evolved it to a tookit for decode and encode the format.
 
-**Check examples dir for user cases:**
-
-[Demo app encoding an ical, using a mysql DB source](examples/mysqlsource)
+Examples can be found in [this repo](https://github.com/jordic/goics).
 
 
 Features implemented:
@@ -38,6 +36,7 @@ CHANGELOG:
 - v00. First api traial
 - v01. Api evolves to a ical toolkit
 - v02. Added example of integration with a mysql db.
+- v03. Added go.mod; moved examples to separate repo.
 
 Thanks to:
 Joe Shaw Reviewing first revision.
