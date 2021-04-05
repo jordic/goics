@@ -11,7 +11,5 @@ matrix:
     - go: "1.12"
     - go: "1.11"
     - go: "1.10"
-    - go: "1.9"
-    - go: "1.8"
   allow_failures:
     - go: tip
